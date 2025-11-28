@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>页眉配置</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        .section { margin: 15px 0; padding: 10px; border: 1px solid #ccc; }
+        label { display: block; margin: 5px 0; }
+        input, select, textarea { width: 100%; padding: 5px; margin: 5px 0; }
+        button { padding: 8px 15px; margin: 5px; cursor: pointer; }
+        .image-preview { max-width: 100%; max-height: 150px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h2>页眉配置</h2>
+
+    <div class="section">
+        <label>显示模式：</label>
+        <select id="displayMode">
+            <option value="text-image">文字 + 图片</option>
+            <option value="image-only">仅图片</option>
+        </select>
+    </div>
+
+    <div class="section" id="textConfig">
+        <label>文字内容：</label>
+        <textarea id="headerText" rows="3">本页面暂停揭阳地市的业务办理，请有需要的客户到中国移动APP或附近营业厅办理，谢谢！</textarea>
+        
+        <label>文字背景颜色：</label>
+        <input type="color" id="textBgColor" value="#f8f9fa">
+    </div>
+
+    <div class="section">
+        <label>页眉图片：</label>
+        <input type="file" id="headerImage" accept="image/*">
+        <div style="font-size: 12px; color: #666;">建议宽度：800像素，高度自适应</div>
+        
+        <div id="imagePreview" style="display: none;">
+            <div>图片预览：</div>
+            <img id="previewImg" class="image-preview">
+            <button type="button" onclick="removeImage()">移除图片</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <button onclick="saveConfig()">保存配置</button>
+        <button onclick="openTestPage()">测试效果</button>
+        <button onclick="resetConfig()">重置</button>
+    </div>
+
+    <script>
+        let config = {
+            headerText: '本页面暂停揭阳地市的业务办理，请有需要的客户到中国移动APP或附近营业厅办理，谢谢！',
+            textBgColor: '#f8f9fa',
+            headerImage: null,
+            displayMode: 'text-image'
+        };
+
+        function init() {
+            loadConfig();
+            
+            document.getElementById('headerText').addEventListener('input', updateConfig);
+            document.getElementById('textBgColor').addEventListener('input', updateConfig);
+            
+            document.getElementById('displayMode').addEventListener('change', function() {
+                updateConfig();
+                toggleTextConfig();
+            });
+            
+            document.getElementById('headerImage').addEventListener('change', handleImageUpload);
+            
+            toggleTextConfig();
+        }
+
+        function toggleTextConfig() {
+            const textConfig = document.getElementById('textConfig');
+            const displayMode = document.getElementById('displayMode').value;
+            textConfig.style.display = displayMode === 'image-only' ? 'none' : 'block';
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.match('image.*')) {
+                alert('请选择图片文件！');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                config.headerImage = e.target.result;
+                showImagePreview();
+                updateConfig();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showImagePreview() {
+            const previewContainer = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            if (previewContainer && previewImg && config.headerImage) {
+                previewContainer.style.display = 'block';
+                previewImg.src = config.headerImage;
+            }
+        }
+
+        function removeImage() {
+            config.headerImage = null;
+            document.getElementById('headerImage').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            updateConfig();
+        }
+
+        function openTestPage() {
+            updateConfig();
+            
+            if (!config.headerImage) {
+                alert('请先上传页眉图片！');
+                return;
+            }
+            
+            if (config.displayMode === 'text-image' && !config.headerText.trim()) {
+                alert('请填写页眉文字内容！');
+                return;
+            }
+            
+            try {
+                localStorage.setItem('headerConfig', JSON.stringify(config));
+                const testPageUrl = 'test-page.html?t=' + Date.now();
+                window.open(testPageUrl, '_blank');
+            } catch (error) {
+                alert('打开测试页面失败');
+            }
+        }
+
+        function loadConfig() {
+            try {
+                const saved = localStorage.getItem('headerConfig');
+                if (saved) {
+                    const savedConfig = JSON.parse(saved);
+                    config = { ...config, ...savedConfig };
+                    
+                    document.getElementById('headerText').value = config.headerText;
+                    document.getElementById('textBgColor').value = config.textBgColor || '#f8f9fa';
+                    document.getElementById('displayMode').value = config.displayMode || 'text-image';
+                    
+                    if (config.headerImage) {
+                        showImagePreview();
+                    }
+                }
+            } catch (error) {
+                console.error('加载配置失败:', error);
+            }
+        }
+
+        function updateConfig() {
+            try {
+                config = {
+                    headerText: document.getElementById('headerText').value,
+                    textBgColor: document.getElementById('textBgColor').value,
+                    headerImage: config.headerImage,
+                    displayMode: document.getElementById('displayMode').value
+                };
+                localStorage.setItem('headerConfig', JSON.stringify(config));
+            } catch (error) {
+                console.error('保存配置失败:', error);
+            }
+        }
+
+        function saveConfig() {
+            updateConfig();
+            alert('配置已保存！');
+        }
+
+        function resetConfig() {
+            if (confirm('确定要重置所有配置吗？')) {
+                localStorage.removeItem('headerConfig');
+                location.reload();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

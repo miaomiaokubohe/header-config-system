@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>页眉测试</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; }
+        #dynamicHeader { width: 100%; }
+    </style>
+</head>
+<body>
+    <div id="dynamicHeader"></div>
+
+    <script>
+        function loadHeaderConfig() {
+            const savedConfig = localStorage.getItem('headerConfig');
+            if (savedConfig) {
+                const config = JSON.parse(savedConfig);
+                applyHeaderConfig(config);
+            } else {
+                document.getElementById('dynamicHeader').innerHTML = '无配置';
+            }
+        }
+        
+        function applyHeaderConfig(config) {
+            const header = document.getElementById('dynamicHeader');
+            
+            if (config.displayMode === 'text-image') {
+                header.innerHTML = `
+                    <div style="width: 100%;">
+                        <div style="background: ${config.textBgColor || '#f8f9fa'}; padding: 15px; text-align: center; font-size: 16px; color: #333;">
+                            ${config.headerText.replace(/\n/g, '<br>')}
+                        </div>
+                        <img src="${config.headerImage}" style="width: 100%; height: auto; display: block;">
+                    </div>
+                `;
+            } else {
+                header.innerHTML = `<img src="${config.headerImage}" style="width: 100%; height: auto; display: block;">`;
+            }
+        }
+
+        loadHeaderConfig();
+    </script>
+</body>
+</html>
